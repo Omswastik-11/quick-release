@@ -28,6 +28,7 @@ This will build the project and place the `quick-release` executable in your Car
 ## Usage
 
 `quick-release` provides a set of simple commands to interact with GitHub releases.
+
 you can use `quick-release --help` for more info
 
 ### List Releases
