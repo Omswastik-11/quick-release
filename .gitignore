@@ -1,0 +1,17 @@
+# Ignore build artifacts
+/target
+
+# Ignore downloaded release assets
+*.zip
+*.tar.gz
+*.msi
+
+# Ignore extracted/installed files
+/wasmedge-installed/
+
+# Ignore environment files
+.env
+
+# Ignore editor-specific files
+.vscode/
+.idea/
