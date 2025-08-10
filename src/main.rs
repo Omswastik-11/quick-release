@@ -121,7 +121,10 @@ async fn main() -> Result<(), Error> {
         Commands::Download { repo, tag, asset } => {
             println!("Fetching release '{}' for repo '{}'...", tag, repo);
 
-            let url = format!("https://api.github.com/repos/{}/releases/tags/{}", repo, tag);
+            let url = format!(
+                "https://api.github.com/repos/{}/releases/tags/{}",
+                repo, tag
+            );
 
             let response = client.get(&url).send().await?;
             if !response.status().is_success() {
@@ -131,7 +134,10 @@ async fn main() -> Result<(), Error> {
                 return Err(Error::ApiError(response.status(), url));
             }
 
-            let release = response.json::<Release>().await.map_err(Error::JsonParseFailed)?;
+            let release = response
+                .json::<Release>()
+                .await
+                .map_err(Error::JsonParseFailed)?;
 
             let asset_to_download = release
                 .assets
@@ -142,7 +148,10 @@ async fn main() -> Result<(), Error> {
             println!("Downloading asset: {}", asset_to_download.name);
             println!("From URL: {}", asset_to_download.browser_download_url);
 
-            let response = client.get(&asset_to_download.browser_download_url).send().await?;
+            let response = client
+                .get(&asset_to_download.browser_download_url)
+                .send()
+                .await?;
 
             let mut dest = File::create(&asset_to_download.name)?;
             let content = response.bytes().await?;
@@ -175,9 +184,15 @@ async fn main() -> Result<(), Error> {
             }
         }
         Commands::ListAssets { repo, tag } => {
-            println!("Fetching assets for release '{}' in repo '{}'...", tag, repo);
+            println!(
+                "Fetching assets for release '{}' in repo '{}'...",
+                tag, repo
+            );
 
-            let url = format!("https://api.github.com/repos/{}/releases/tags/{}", repo, tag);
+            let url = format!(
+                "https://api.github.com/repos/{}/releases/tags/{}",
+                repo, tag
+            );
 
             let response = client.get(&url).send().await?;
             if !response.status().is_success() {
@@ -187,7 +202,10 @@ async fn main() -> Result<(), Error> {
                 return Err(Error::ApiError(response.status(), url));
             }
 
-            let release = response.json::<Release>().await.map_err(Error::JsonParseFailed)?;
+            let release = response
+                .json::<Release>()
+                .await
+                .map_err(Error::JsonParseFailed)?;
 
             println!("Available assets:");
             if release.assets.is_empty() {

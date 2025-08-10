@@ -90,3 +90,41 @@ File 1 extracted to "wasmedge-installed/lib/"
 ...
 Successfully installed WasmEdge-0.15.0-windows.zip!
 ```
+
+### Remove a Downloaded Asset
+
+Delete an already-downloaded archive from disk:
+```bash
+quick-release remove --asset "WasmEdge-0.15.0-windows.zip"
+```
+
+### Uninstall Files Extracted from an Asset
+
+Remove files previously extracted from an archive into a directory:
+```bash
+quick-release uninstall --asset "WasmEdge-0.15.0-windows.zip" --dir "wasmedge-installed"
+```
+What happens:
+- Reads the archive to learn its file/dir entries.
+- Removes matching files under the install directory first.
+- Then prunes now-empty directories (deepest-first); leaves non-empty ones.
+
+## Platform support
+
+Extraction supported on Linux, macOS, and Windows for:
+- .zip
+- .tar.gz / .tgz
+- .tar.xz
+- .tar
+
+## Development
+
+Run tests (unit + integration):
+```bash
+cargo test --all
+```
+
+CI (GitHub Actions):
+- Builds and tests on ubuntu-latest, macos-latest, windows-latest
+- Runs rustfmt check and clippy lints
+Workflow: `.github/workflows/ci.yml`

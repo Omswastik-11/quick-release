@@ -40,13 +40,17 @@ pub(crate) fn extract_archive(archive_path: &Path, dest: &Path) -> Result<(), Er
     }
 }
 
-pub(crate) fn list_archive_entries(archive_path: &Path) -> Result<Vec<(std::path::PathBuf, bool)>, Error> {
+pub(crate) fn list_archive_entries(
+    archive_path: &Path,
+) -> Result<Vec<(std::path::PathBuf, bool)>, Error> {
     match detect_archive_type(archive_path) {
         Some(ArchiveType::Zip) => list_zip_entries(archive_path),
         Some(ArchiveType::TarGz) => list_targz_entries(archive_path),
         Some(ArchiveType::TarXz) => list_tarxz_entries(archive_path),
         Some(ArchiveType::Tar) => list_tar_entries(archive_path),
-        None => Err(Error::UnsupportedArchive(archive_path.display().to_string())),
+        None => Err(Error::UnsupportedArchive(
+            archive_path.display().to_string(),
+        )),
     }
 }
 
@@ -65,7 +69,12 @@ fn extract_zip(archive_path: &Path, dest: &Path) -> Result<(), Error> {
             println!("Dir {} -> {}", i, outpath.display());
             fs::create_dir_all(&outpath)?;
         } else {
-            println!("File {} -> {} ({} bytes)", i, outpath.display(), file.size());
+            println!(
+                "File {} -> {} ({} bytes)",
+                i,
+                outpath.display(),
+                file.size()
+            );
             if let Some(p) = outpath.parent() {
                 if !p.exists() {
                     fs::create_dir_all(&p)?;
@@ -140,14 +149,18 @@ fn list_tar_entries(archive_path: &Path) -> Result<Vec<(std::path::PathBuf, bool
     list_tar_like_entries(file)
 }
 
-fn list_tar_like_entries<R: std::io::Read>(reader: R) -> Result<Vec<(std::path::PathBuf, bool)>, Error> {
+fn list_tar_like_entries<R: std::io::Read>(
+    reader: R,
+) -> Result<Vec<(std::path::PathBuf, bool)>, Error> {
     let mut archive = tar::Archive::new(reader);
     let mut out = Vec::new();
     for entry in archive.entries()? {
         let entry = entry?;
         let path = entry.path()?;
         let is_dir = entry.header().entry_type().is_dir();
-        if path.is_absolute() { continue; }
+        if path.is_absolute() {
+            continue;
+        }
         out.push((path.to_path_buf(), is_dir));
     }
     Ok(out)

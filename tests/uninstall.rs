@@ -22,7 +22,8 @@ fn uninstall_removes_files() {
     fs::create_dir_all(&outdir).unwrap();
 
     // install
-    std::process::Command::cargo_bin("quick-release").unwrap()
+    std::process::Command::cargo_bin("quick-release")
+        .unwrap()
         .args([
             "install",
             "--asset",
@@ -37,7 +38,8 @@ fn uninstall_removes_files() {
     assert!(file.exists());
 
     // uninstall
-    std::process::Command::cargo_bin("quick-release").unwrap()
+    std::process::Command::cargo_bin("quick-release")
+        .unwrap()
         .args([
             "uninstall",
             "--asset",
