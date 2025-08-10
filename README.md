@@ -28,6 +28,7 @@ This will build the project and place the `quick-release` executable in your Car
 ## Usage
 
 `quick-release` provides a set of simple commands to interact with GitHub releases.
+
 you can use `quick-release --help` for more info
 
 ### List Releases
@@ -89,56 +90,3 @@ File 1 extracted to "wasmedge-installed/lib/"
 ...
 Successfully installed WasmEdge-0.15.0-windows.zip!
 ```
-
-### Remove a Downloaded Asset File
-
-Delete a previously downloaded asset archive from disk:
-```bash
-quick-release remove --asset "WasmEdge-0.15.0-windows.zip"
-```
-This only deletes the archive file; it does not affect any files you may have installed from it.
-
-### Uninstall Files Extracted from an Asset
-
-Remove files that were extracted by a specific archive into a directory:
-```bash
-quick-release uninstall --asset "WasmEdge-0.15.0-windows.zip" --dir "wasmedge-installed"
-```
-How it works:
-- The tool reads the archive to enumerate its file and directory entries.
-- It removes matching files under the install directory first.
-- Then it attempts to remove now-empty directories, deepest-first. Non-empty directories are left intact.
-
-Notes:
-- This is safest when the install directory wasn’t manually modified after installation.
-- To preview actions (dry run) or track installs more reliably, consider adding a small manifest per install (future enhancement).
-
-## Platform support
-
-The installer supports extracting these formats on Linux, macOS, and Windows:
-- .zip
-- .tar.gz / .tgz
-- .tar.xz
-- .tar
-
-## Development
-
-### Run Tests
-
-This project uses both unit tests (inside modules) and integration tests under the `tests/` folder.
-```bash
-cargo test --all
-```
-
-Integration tests include:
-- `tests/version.rs`: checks `--version` output.
-- `tests/install.rs`: verifies install extracts archives.
-- `tests/remove.rs`: verifies asset file removal.
-- `tests/uninstall.rs`: verifies uninstall removes extracted files.
-
-### CI
-
-GitHub Actions run on push and pull requests against `main` with:
-- Build and test on `ubuntu-latest`, `macos-latest`, and `windows-latest`.
-- Formatting check and Clippy lints.
-The workflow is in `.github/workflows/ci.yml`.
