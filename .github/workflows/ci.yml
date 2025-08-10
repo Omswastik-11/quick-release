@@ -26,13 +26,11 @@ jobs:
         uses: Swatinem/rust-cache@v2
         with:
           workspaces: |
-            quick-release
+            .
       - name: Build
-        working-directory: quick-release
         run: |
           cargo build --locked --all-targets
       - name: Test
-        working-directory: quick-release
         run: |
           cargo test --locked --all
 
@@ -50,10 +48,8 @@ jobs:
         uses: Swatinem/rust-cache@v2
         with:
           workspaces: |
-            quick-release
+            .
       - name: Format check
-        working-directory: quick-release
         run: cargo fmt --all -- --check
       - name: Clippy
-        working-directory: quick-release
         run: cargo clippy --all-targets -- -D warnings
