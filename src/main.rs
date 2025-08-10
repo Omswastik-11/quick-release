@@ -17,11 +17,11 @@ enum Error {
     #[error("Release tag '{0}' not found for repo '{1}'")]
     ReleaseNotFound(String, String),
     #[error("I/O error: {0}")]
-    IoError(#[from] std::io::Error),
+    Io(#[from] std::io::Error),
     #[error("Zip archive error: {0}")]
     ZipError(#[from] zip::result::ZipError),
     #[error("API call failed with status: {0} for url: {1}")]
-    ApiError(reqwest::StatusCode, String),
+    Api(reqwest::StatusCode, String),
     #[error("Unsupported archive type for file: {0}")]
     UnsupportedArchive(String),
 }
@@ -131,7 +131,7 @@ async fn main() -> Result<(), Error> {
                 if response.status() == reqwest::StatusCode::NOT_FOUND {
                     return Err(Error::ReleaseNotFound(tag, repo));
                 }
-                return Err(Error::ApiError(response.status(), url));
+                return Err(Error::Api(response.status(), url));
             }
 
             let release = response
@@ -166,7 +166,7 @@ async fn main() -> Result<(), Error> {
 
             let response = client.get(&url).send().await?;
             if !response.status().is_success() {
-                return Err(Error::ApiError(response.status(), url));
+                return Err(Error::Api(response.status(), url));
             }
 
             let releases = response
@@ -199,7 +199,7 @@ async fn main() -> Result<(), Error> {
                 if response.status() == reqwest::StatusCode::NOT_FOUND {
                     return Err(Error::ReleaseNotFound(tag, repo));
                 }
-                return Err(Error::ApiError(response.status(), url));
+                return Err(Error::Api(response.status(), url));
             }
 
             let release = response
@@ -267,7 +267,7 @@ async fn main() -> Result<(), Error> {
                     match fs::remove_dir(&d) {
                         Ok(()) => println!("Removed dir: {}", d.display()),
                         Err(e) if e.kind() == std::io::ErrorKind::DirectoryNotEmpty => {}
-                        Err(e) => return Err(Error::IoError(e)),
+                        Err(e) => return Err(Error::Io(e)),
                     }
                 }
             }

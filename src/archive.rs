@@ -65,7 +65,7 @@ fn extract_zip(archive_path: &Path, dest: &Path) -> Result<(), Error> {
             None => continue,
         };
 
-        if (&*file.name()).ends_with('/') {
+    if file.name().ends_with('/') {
             println!("Dir {} -> {}", i, outpath.display());
             fs::create_dir_all(&outpath)?;
         } else {
@@ -77,7 +77,7 @@ fn extract_zip(archive_path: &Path, dest: &Path) -> Result<(), Error> {
             );
             if let Some(p) = outpath.parent() {
                 if !p.exists() {
-                    fs::create_dir_all(&p)?;
+            fs::create_dir_all(p)?;
                 }
             }
             let mut outfile = fs::File::create(&outpath)?;
