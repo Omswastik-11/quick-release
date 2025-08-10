@@ -1,10 +1,10 @@
 use clap::Parser;
 use serde::Deserialize;
 use std::fs::{self, File};
-use std::io::{copy, Read, Write};
+use std::io::copy;
 use std::path::{Path, PathBuf};
 use thiserror::Error;
-use zip::ZipArchive;
+mod archive;
 
 #[derive(Error, Debug)]
 enum Error {
@@ -22,6 +22,8 @@ enum Error {
     ZipError(#[from] zip::result::ZipError),
     #[error("API call failed with status: {0} for url: {1}")]
     ApiError(reqwest::StatusCode, String),
+    #[error("Unsupported archive type for file: {0}")]
+    UnsupportedArchive(String),
 }
 
 #[derive(Parser, Debug)]
@@ -70,6 +72,21 @@ enum Commands {
         asset: String,
 
         /// The directory to install to
+        #[arg(short, long)]
+        dir: Option<PathBuf>,
+    },
+    /// Remove a downloaded asset file
+    Remove {
+        /// The asset file to delete
+        #[arg(short, long)]
+        asset: String,
+    },
+    /// Uninstall files extracted from an asset into a directory
+    Uninstall {
+        /// The asset archive that was previously installed
+        #[arg(short, long)]
+        asset: String,
+        /// Install directory where files were extracted
         #[arg(short, long)]
         dir: Option<PathBuf>,
     },
@@ -189,39 +206,58 @@ async fn main() -> Result<(), Error> {
                 install_dir.display()
             );
 
-            let file = File::open(&asset)?;
-            let mut archive = ZipArchive::new(file)?;
+            let asset_path = Path::new(&asset);
+            crate::archive::extract_archive(asset_path, &install_dir)?;
 
-            for i in 0..archive.len() {
-                let mut file = archive.by_index(i)?;
-                let outpath = match file.enclosed_name() {
-                    Some(path) => install_dir.join(path),
-                    None => continue,
-                };
+            println!("Successfully installed {}!", asset_path.display());
+        }
+        Commands::Remove { asset } => {
+            let path = Path::new(&asset);
+            if path.exists() {
+                fs::remove_file(path)?;
+                println!("Removed asset file: {}", path.display());
+            } else {
+                println!("Asset file not found: {}", path.display());
+            }
+        }
+        Commands::Uninstall { asset, dir } => {
+            let install_dir = dir.unwrap_or_else(|| PathBuf::from("."));
+            let asset_path = Path::new(&asset);
+            println!(
+                "Uninstalling files from '{}' based on archive '{}'...",
+                install_dir.display(),
+                asset_path.display()
+            );
 
-                if (&*file.name()).ends_with('/') {
-                    println!("File {} extracted to \"{}\"", i, outpath.display());
-                    fs::create_dir_all(&outpath)?;
-                } else {
-                    println!(
-                        "File {} extracted to \"{}\" ({} bytes)",
-                        i,
-                        outpath.display(),
-                        file.size()
-                    );
-                    if let Some(p) = outpath.parent() {
-                        if !p.exists() {
-                            fs::create_dir_all(&p)?;
-                        }
-                    }
-                    let mut outfile = fs::File::create(&outpath)?;
-                    copy(&mut file, &mut outfile)?;
+            let entries = crate::archive::list_archive_entries(asset_path)?;
+            // Remove files first, then prune empty directories deepest-first
+            let mut dirs = Vec::new();
+            for (rel, is_dir) in &entries {
+                let target = install_dir.join(rel);
+                if *is_dir {
+                    dirs.push(target);
+                } else if target.exists() {
+                    fs::remove_file(&target)?;
+                    println!("Removed file: {}", target.display());
                 }
             }
-
-            println!("Successfully installed {}!", asset);
+            // Sort directories by path length descending to remove nested first
+            dirs.sort_by_key(|p| std::cmp::Reverse(p.as_os_str().len()));
+            for d in dirs {
+                if d.exists() {
+                    // Remove dir if empty
+                    match fs::remove_dir(&d) {
+                        Ok(()) => println!("Removed dir: {}", d.display()),
+                        Err(e) if e.kind() == std::io::ErrorKind::DirectoryNotEmpty => {}
+                        Err(e) => return Err(Error::IoError(e)),
+                    }
+                }
+            }
+            println!("Uninstall complete.");
         }
     }
 
     Ok(())
 }
+
+// helpers moved to crate::archive
